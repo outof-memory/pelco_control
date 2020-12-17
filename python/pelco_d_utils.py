@@ -8,6 +8,8 @@ cmdDict = {"UP": [0x00, 0x08],
            "DOWN": [0x00, 0x10],
            "LEFT": [0x00, 0x04],
            "RIGHT": [0x00, 0x02],
+           "DOWNLEFT": [0x00, 0x14],
+           "UPLEFT": [0x00, 0x0c],
            "CLEAN": [0x00, 0x00],
            "SETPRE": [0x00, 0x03],
            "SETP": [0x00, 0x4b],
@@ -100,10 +102,12 @@ if __name__ == "__main__":
     )
     parser.add_argument('--cmd', required=True,
                         help='command')
-    parser.add_argument('--data', nargs=2, default=[0, 0], type=int,
+    parser.add_argument('--data', default=0, type=int,
                         help='data')
     args = parser.parse_args()
-    cmd = command(args.cmd, args.data[0], args.data[1])
+    data0 = args.data // 256
+    data1 = args.data % 256
+    cmd = command(args.cmd, data0, data1)
     port = "/dev/ttyTHS0"
     with Serial(port, 9600, timeout=1) as ser:
         print("send:", cmd)
