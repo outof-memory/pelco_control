@@ -109,20 +109,21 @@ if __name__ == "__main__":
     data1 = args.data % 256
     cmd = command(args.cmd, data0, data1)
     port = "/dev/ttyTHS0"
-    with Serial(port, 9600, timeout=1) as ser:
-        print("send:", cmd)
-        ser.write(bytes(cmd))
-        if args.cmd[:5] == "query":
-            response = recvData(ser)
-            print("recv ", np.ndarray(buffer=response, shape=(7,), dtype=np.uint8))
-            #response = ser.read()
-            #print(response)
+    ser = Serial(port, 9600, timeout=1)
+    print("send:", cmd)
+    ser.write(bytes(cmd))
+    if args.cmd[:5] == "query":
+        response = recvData(ser)
+        print("recv ", np.ndarray(buffer=response, shape=(7,), dtype=np.uint8))
+        #response = ser.read()
+        #print(response)
+    else:
+        response = ser.read()
+        if response.decode() == '\x01':
+            print("command %s response" %args.cmd)
+        elif response.decode() == "":
+            print("command %s not response" %args.cmd)
         else:
-            response = ser.read()
-            if response.decode() == '\x01':
-                print("command %s response" %args.cmd)
-            elif response.decode() == "":
-                print("command %s not response" %args.cmd)
-            else:
-                print(response)
+            print(response)
+    ser.close()
 
