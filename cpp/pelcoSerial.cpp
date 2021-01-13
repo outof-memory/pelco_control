@@ -1,17 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>        /* 文件控制定义 */
-#include <termios.h>      /* PPSIX终端控制定义 */
-#include <cstring>
-#include <string>
-#include <iostream>
-#include <errno.h>
-#include <map>
+#include "pelcoSerial.h"
 using namespace std;
 
-inline int CheckSum(unsigned char *command)
+pelco::pelco(char* dev){
+  int fd = open(dev, O_RDWR | O_NOCTTY | O_SYNC);
+  if (fd > 0)
+    set_interface_attribs(fd, B9600);
+  else
+  {
+    printf("Can't Open Serial Port '%s'\n ", dev);
+  }
+}
+
+pelco::~pelco(){
+  close(fd);
+}
+
+inline int pelco::CheckSum(unsigned char *command)
 {
   int sum = 0;
   for (int i = 1; i < 6; i ++)
@@ -24,7 +28,7 @@ inline int CheckSum(unsigned char *command)
     command[6] = sum;
 }
 
-inline int cmd(unsigned char *command, char * cmdName){
+inline int pelco::cmd(unsigned char *command, char * cmdName){
   if (std::strcmp(cmdName, "clean") == 0 || std::strcmp(cmdName, "CLEAN") == 0){
     command[2] = 0x00; // cmd1
     command[3] = 0x00; // cmd2
@@ -57,7 +61,7 @@ inline int cmd(unsigned char *command, char * cmdName){
   }
 }
 
-int set_interface_attribs(int fd, int speed)
+int pelco::set_interface_attribs(int fd, int speed)
 {
     struct termios tty;
 
@@ -92,7 +96,7 @@ int set_interface_attribs(int fd, int speed)
     return 0;
 }
 
-void makeCommand(unsigned char* command, char * cmdName, int data1, int data2){
+void pelco::makeCommand(unsigned char* command, char * cmdName, int data1, int data2){
   command[0] = 0xFF; // sync
   command[1] = 0x01; // addr
   cmd(command, cmdName);
@@ -101,7 +105,7 @@ void makeCommand(unsigned char* command, char * cmdName, int data1, int data2){
   CheckSum(command);
 }
 
-int recvData(int fd, char* cmdName){
+int pelco::recvData(int fd, char* cmdName){
   unsigned char buf[1024];
   bzero(buf, 1024);
   int rdlen;
@@ -134,31 +138,11 @@ int recvData(int fd, char* cmdName){
 
 }
 
-int main(int argc, char *argv[])
-{
-  char cmdName[10];
-  int data(0), data1(0), data2(0);
-  if (argc > 1){
-    sprintf(cmdName, "%s", argv[1]);
-  }else{
-    sprintf(cmdName, "CLEAN");
-  }
-  if (argc > 2){
-    data = atoi(argv[2]);
-    data1 = data / 256;
-    data2 = data % 256;
-  }
 
-  char dev[20] = "/dev/ttyTHS0";
-  int fd = open(dev, O_RDWR | O_NOCTTY | O_SYNC);
-  if (fd > 0)
-    set_interface_attribs(fd, B9600);
-  else
-  {
-    printf("Can't Open Serial Port '%s'\n ", dev);
-    return -1;
-  }
-
+int pelco::running(char* cmdName, int data){
+  int data1(0), data2(0);
+  data1 = data / 256;
+  data2 = data % 256;
   unsigned char command[7];
   printf("command %s: %02x %02x %02x %02x %02x %02x %02x \n", cmdName,
          command[0], command[1], command[2], command[3], command[4], command[5], command[6]
@@ -166,15 +150,6 @@ int main(int argc, char *argv[])
   makeCommand(command, cmdName, data1, data2);
   write(fd, command, sizeof(command));
   int ret = recvData(fd, cmdName);
-  if (ret == -1){
-    cout << "wrong" << endl; 
-  }else if (ret == 1){
-    cout << "reponse correctly" << endl; 
-  }else if (ret == 0){
-    cout << "reponse correctly, but no motion" << endl; 
-  }
-
-  close(fd);
-
-  return 0;
+  return ret;
 }
+
