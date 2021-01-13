@@ -7,6 +7,7 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <errno.h>
 #include <map>
 using namespace std;
 
@@ -91,8 +92,7 @@ int set_interface_attribs(int fd, int speed)
     return 0;
 }
 
-void makeCommand(unsigned char* command, char * cmdName, int data1,
-                 int data2, std::map<char*, unsigned char>& cmdDict){
+void makeCommand(unsigned char* command, char * cmdName, int data1, int data2){
   command[0] = 0xFF; // sync
   command[1] = 0x01; // addr
   cmd(command, cmdName);
@@ -101,7 +101,7 @@ void makeCommand(unsigned char* command, char * cmdName, int data1,
   CheckSum(command);
 }
 
-void recvData(int fd, char* cmdName){
+int recvData(int fd, char* cmdName){
   unsigned char buf[1024];
   bzero(buf, 1024);
   int rdlen;
@@ -115,10 +115,13 @@ void recvData(int fd, char* cmdName){
   timeout.tv_sec = 1;
   timeout.tv_usec = 1000;
   rv = select(fd+ 1, &set, NULL, NULL, &timeout);
-  if(rv == -1)
-    perror("select"); /* an error accured */
-  else if(rv == 0)
-    printf("timeout: command %s not resonse \n", cmdName); /* a timeout occured */
+  if(rv == -1) {
+    return -1;
+  }
+  else if(rv == 0){
+    printf("command %s resonse, no motion \n", cmdName); /* a timeout occured */
+    return 0;
+  }
   else{
     rdlen = read( fd, buf, 1024); /* there was data to read */
     if (buf[0] == 0x01){
@@ -126,8 +129,8 @@ void recvData(int fd, char* cmdName){
     }else{
       printf("%s: %d \n", cmdName, buf[4]*256+buf[5]);
     }
+    return 1;
   }
-  close(fd);
 
 }
 
@@ -160,10 +163,18 @@ int main(int argc, char *argv[])
   printf("command %s: %02x %02x %02x %02x %02x %02x %02x \n", cmdName,
          command[0], command[1], command[2], command[3], command[4], command[5], command[6]
          );
-  makeCommand(command, cmdName, data1, data2, cmdDict);
+  makeCommand(command, cmdName, data1, data2);
   write(fd, command, sizeof(command));
-  recvData(fd, cmdName);
+  int ret = recvData(fd, cmdName);
+  if (ret == -1){
+    cout << "wrong" << endl; 
+  }else if (ret == 1){
+    cout << "reponse correctly" << endl; 
+  }else if (ret == 0){
+    cout << "reponse correctly, but no motion" << endl; 
+  }
+
+  close(fd);
 
   return 0;
 }
-
