@@ -122,7 +122,7 @@ if __name__ == "__main__":
         if response.decode() == '\x01':
             print("command %s response" %args.cmd)
         elif response.decode() == "":
-            print("command %s not response" %args.cmd)
+            print("command %s response, but no motion" %args.cmd)
         else:
             print(response)
     ser.close()
