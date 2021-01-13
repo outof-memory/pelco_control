@@ -133,17 +133,6 @@ void recvData(int fd, char* cmdName){
 
 int main(int argc, char *argv[])
 {
-  std::map<char*, unsigned char> cmdDict;
-  cmdDict.insert(std::pair<char*, unsigned char>("CLEAN", 0xff));
-  cmdDict.insert(std::pair<char*, unsigned char>("RIGHT", 0x02));
-  cmdDict.insert(std::pair<char*, unsigned char>("LEFT", 0x04));
-  cmdDict.insert(std::pair<char*, unsigned char>("UP", 0x08));
-  cmdDict.insert(std::pair<char*, unsigned char>("DOWN", 0x10));
-  cmdDict.insert(std::pair<char*, unsigned char>("SETP", 0x4b));
-  cmdDict.insert(std::pair<char*, unsigned char>("SETT", 0x4d));
-  cmdDict.insert(std::pair<char*, unsigned char>("QUERYP", 0x51));
-  cmdDict.insert(std::pair<char*, unsigned char>("QUERYT", 0x53));
-
   char cmdName[10];
   int data(0), data1(0), data2(0);
   if (argc > 1){
