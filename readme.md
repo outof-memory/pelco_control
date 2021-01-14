@@ -18,9 +18,14 @@
 ### "QUERYT": [0x00, 0x53]}
 
 ## usage
-data0 = data // 256, data1 = data % 256
+### python
+data1 = data // 256, data2 = data % 256
 python3 pelco_d_utils.py --cmd command --data 0
 example: python3 pelco_d_utils.py --cmd left --data 10
 command is from "support commands", can be lower; data represents data0 and data1
 sett: valid range degree -15 ~ 90, corresponding data is 0 ~ 9000, 34500 ~ 36000
 setp: valid range degree 0 ~ 180, corresponding data is 0 ~ 18000
+
+### cpp
+data1 = data // 256, data2 = data % 256
+./demo command 0

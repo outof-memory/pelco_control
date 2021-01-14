@@ -1,3 +1,4 @@
+/* pelco serial control demo */
 #include "pelcoSerial.h"
 int main(int argc, char *argv[]){
   char cmdName[10] = "CLEAN";
@@ -5,8 +6,6 @@ int main(int argc, char *argv[]){
   if (argc > 1){
     bzero(cmdName, 10);
     sprintf(cmdName, "%s", argv[1]);
-  }else{
-    sprintf(cmdName, "CLEAN");
   }
   if (argc > 2){
     data = atoi(argv[2]);
